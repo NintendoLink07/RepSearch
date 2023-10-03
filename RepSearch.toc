@@ -1,8 +1,9 @@
 ## Interface: 100107
 ## Title: RepSearch
 ## Author: Rhany-Ravencrest
+## IconTexture: Interface\AddOns\RepSearch\res\Logo_256.png
 ## Notes: Search through your reputations
-## Version: 0.5.7
+## Version: 0.5.8
 ## Dependencies: 
 ## SavedVariables:
 ## SavedVariablesPerCharacter: RepSearch_SavedOptionSettings
