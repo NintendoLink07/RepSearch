@@ -37,7 +37,6 @@ repSearch.createFrameBackgroundWithSolidColor = function(frame, oThickness, oR, 
 
 	frame:SetBackdrop( { bgFile="Interface\\ChatFrame\\ChatFrameBackground", tileSize=16, tile=true} )
 	frame:SetBackdropColor(r, g, b, a) -- main area color
-	--frame:SetBackdropBorderColor(0, 0, 0, a) -- border color
 end
 
 repSearch.createFrameWithBackgroundAndBorder = function(frame, oThickness, oR, oG, oB, oA)

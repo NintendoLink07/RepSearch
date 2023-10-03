@@ -64,6 +64,7 @@
         "ReputationFrame_Update",
         "APIDocumentation",
         "STANDING",
-        "CharacterFrameTab1"
+        "CharacterFrameTab1",
+        "ReputationDetailViewRenownButtonMixin"
     ]
 }

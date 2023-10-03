@@ -287,10 +287,9 @@ repSearch.createRepSearch = function()
     local inactiveButton = repSearch.persistentFramePool:Acquire("UICheckButtonTemplate")
     inactiveButton:SetSize(25, 25)
     inactiveButton:SetPoint("TOP", atWarButton, "BOTTOM")
-    --subheaderBarButton:SetChecked(true)
     inactiveButton:SetParent(detailFrameSettings)
     inactiveButton:SetScript("OnClick", function()
-        local name, description, standingID, barMin, barMax, barValue, atWarWith, canToggleAtWar, isHeader, isCollapsed, hasRep, isWatched, isChild, factionID, hasBonusRepGain, canBeLFGBonus = GetFactionInfo(repSearch.F.CURRENTLY_WATCHED_FACTION)
+        local _, _, _, _, _, _, _, _, _, _, _, _, _, factionID = GetFactionInfo(repSearch.F.CURRENTLY_WATCHED_FACTION)
 
         if(inactiveButton:GetChecked()) then
             SetFactionInactive(repSearch.F.CURRENTLY_WATCHED_FACTION)
@@ -299,7 +298,7 @@ repSearch.createRepSearch = function()
         end
 
         local newIndex = repSearch.getNewIndex(factionID)
-        detailFrame.InsertData(newIndex, "button")
+        detailFrame.InsertData(newIndex)
     end)
     inactiveButton:Show()
     detailFrame.settingsFrame.inactiveButton = inactiveButton
@@ -313,7 +312,6 @@ repSearch.createRepSearch = function()
     local experienceButton = repSearch.persistentFramePool:Acquire("UICheckButtonTemplate")
     experienceButton:SetSize(25, 25)
     experienceButton:SetPoint("TOP", inactiveButton, "BOTTOM")
-    --subheaderBarButton:SetChecked(true)
     experienceButton:SetParent(detailFrameSettings)
     experienceButton:SetScript("OnClick", function()
         if(experienceButton:GetChecked()) then
@@ -349,10 +347,6 @@ repSearch.createRepSearch = function()
     end)
     renownButton:Hide()
     detailFrame.renownButton = renownButton
-
-
-
-
 
     local nextRewardFrame = repSearch.persistentFramePool:Acquire("ChatConfigBorderBoxTemplate")
     nextRewardFrame:SetSize(detailFrame:GetWidth(), detailFrame:GetHeight()/2)

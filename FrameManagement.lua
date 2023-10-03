@@ -55,7 +55,6 @@ local function resetTemporaryFrames(_, childFrame)
 		childFrame:SetStatusBarColor(0, 0, 0, 0)
 		childFrame:SetMinMaxValues(0, 0)
 		childFrame:SetValue(0)
-		--print(childFrame:GetStatusBarTexture())
 	end
 end
 

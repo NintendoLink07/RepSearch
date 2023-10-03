@@ -2,7 +2,7 @@
 ## Title: RepSearch
 ## Author: Rhany-Ravencrest
 ## Notes: Search through your reputations
-## Version: 0.5.6
+## Version: 0.5.7
 ## Dependencies: 
 ## SavedVariables:
 ## SavedVariablesPerCharacter: RepSearch_SavedOptionSettings
