@@ -3,7 +3,7 @@
 ## Author: Rhany-Ravencrest
 ## IconTexture: Interface\AddOns\RepSearch\res\Logo_256.png
 ## Notes: Search through your reputations
-## Version: 0.5.8
+## Version: 0.6.0
 ## SavedVariablesPerCharacter: RepSearch_SavedOptionSettings
 
 ## X-Website: https://github.com/NintendoLink07/RepSearch
