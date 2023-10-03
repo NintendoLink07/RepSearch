@@ -21,7 +21,8 @@ repSearch.C = {
 }
 
 repSearch.F = {
-    CURRENTLY_WATCHED_FACTION = ""
+    CURRENTLY_WATCHED_FACTION = "",
+    ADDON_VISIBLE = true,
 }
 
 repSearch.fonts = {

@@ -3,6 +3,7 @@ local addonName, repSearch = ...
 local function resetPersistentFrames(_, childFrame)
     childFrame:Hide()
 	childFrame:ClearAllPoints()
+	childFrame:SetFrameStrata("LOW")
 end
 
 local function resetPersistentFontStrings(_, childFontString)
@@ -34,10 +35,17 @@ repSearch.persistentNormalTextPool = CreateFontStringPool(repSearch.persistentFr
 repSearch.persistentHeaderTextPool = CreateFontStringPool(repSearch.persistentFramePool:Acquire("BackdropTemplate"), "ARTWORK", nil, "GameFontNormal", resetPersistentFontStrings)
 repSearch.persistentTexturePool = CreateTexturePool(repSearch.persistentFramePool:Acquire("BackdropTemplate"), "ARTWORK", nil, nil, resetPersistentTextures)
 
+repSearch.releaseAllPersistentPools = function()
+    repSearch.persistentTexturePool:ReleaseAll()
+	repSearch.persistentHeaderTextPool:ReleaseAll()
+	repSearch.persistentNormalTextPool:ReleaseAll()
+	repSearch.persistentFontStringPool:ReleaseAll()
+	repSearch.persistentFramePool:ReleaseAll()
+end
 local function resetTemporaryFrames(_, childFrame)
     childFrame:Hide()
 	childFrame:ClearAllPoints()
-	childFrame:SetFrameStrata("LOW")
+	childFrame:SetFrameStrata("MEDIUM")
 
 	local typeOfFrame = childFrame:GetObjectType()
 
@@ -73,6 +81,7 @@ repSearch.temporaryFramePool:CreatePoolIfNeeded("Frame", nil, "ResizeLayoutFrame
 repSearch.temporaryFramePool:CreatePoolIfNeeded("Frame", nil, "BackdropTemplate", resetTemporaryFrames)
 repSearch.temporaryFramePool:CreatePoolIfNeeded("ScrollFrame", nil, "BackdropTemplate, ScrollFrameTemplate", resetTemporaryFrames)
 repSearch.temporaryFramePool:CreatePoolIfNeeded("CheckButton", nil, "UICheckButtonTemplate", resetTemporaryFrames)
+--repSearch.temporaryFramePool:CreatePoolIfNeeded("StatusBar", nil, "BackdropTemplate", resetTemporaryFrames)
 
 repSearch.temporaryFontStringPool = CreateFontStringPool(repSearch.temporaryFramePool:Acquire("BackdropTemplate"), "ARTWORK", nil, "GameTooltipText", resetTemporaryFontStrings)
 repSearch.temporaryStatusBarPool = CreateFramePool("StatusBar", nil, "BackdropTemplate", resetTemporaryFrames)

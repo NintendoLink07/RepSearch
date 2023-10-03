@@ -81,12 +81,15 @@ repSearch.createRepSearch = function()
             repSearch.mainFrame:Show()
             ReputationFrame.ScrollBox:Hide()
             ReputationFrame.ScrollBar:Hide()
+            repSearch.F.ADDON_VISIBLE = true
 
         else
             repSearch.mainFrame:Hide()
             ReputationFrame.ScrollBox:Show()
             ReputationFrame.ScrollBar:Show()
+            repSearch.F.ADDON_VISIBLE = false
         end
+
     end)
     toggleMainFrame:Show()
 
@@ -100,6 +103,8 @@ repSearch.createRepSearch = function()
         ReputationFrame.ScrollBar:Show()
 
     end
+
+    repSearch.mainFrame.toggleMainFrame = toggleMainFrame
 
     local expandDownwardsButton = repSearch.persistentFramePool:Acquire("UIButtonTemplate")
 	expandDownwardsButton:SetParent(repSearch.mainFrame)

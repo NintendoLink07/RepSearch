@@ -358,6 +358,7 @@ repSearch.createFrames = function(searchText)
         PixelUtil.SetPoint(mainReputationFrame, "TOPLEFT", lastMainReputationFrame or repSearch.mainFrame.mainScrollFrame.mainContainer, lastMainReputationFrame and "BOTTOMLEFT" or "TOPLEFT", lastMainReputationFrame and 0 or 4, lastMainReputationFrame and -4 or 0)
         mainReputationFrame:SetWidth(repSearch.mainFrame.mainScrollFrame.mainContainer:GetWidth())
         mainReputationFrame:SetParent(repSearch.mainFrame.mainScrollFrame.mainContainer)
+        mainReputationFrame:SetFrameStrata("HIGH")
         mainReputationFrame:Hide()
 
         repSearch.mainFrame.mainScrollFrame.mainContainer[headerArray.Name] = mainReputationFrame
@@ -538,16 +539,18 @@ end
 
 repSearch.OnEvent = function(self, event, ...)
     if(event == "PLAYER_LOGIN") then
+        repSearch.releaseAllPersistentPools()
+        repSearch.createRepSearch()
     elseif(event == "UPDATE_FACTION") then
-        repSearch.createDataStructure()
+        if(repSearch.F.ADDON_VISIBLE == true) then
+            repSearch.createDataStructure()
 
-        if(repSearch.mainFrame.mainScrollFrame) then
-            repSearch.createFrames(tostring(repSearch.mainFrame.searchBar:GetText()))
+            if(repSearch.mainFrame.mainScrollFrame) then
+                repSearch.createFrames(tostring(repSearch.mainFrame.searchBar:GetText()))
+            end
         end
-        
     elseif(event == "PLAYER_ENTERING_WORLD") then
         repSearch.releaseAllTemporaryPools()
         repSearch.createDataStructure()
-        repSearch.createRepSearch()
     end
 end
