@@ -40,7 +40,7 @@ and this project adheres to [Semantic Versioning].
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
 
 <!-- Versions -->
-[unreleased]: https://github.com/NintendoLink07/MythicIOGrabber/compare/v0.6.2...HEAD
-[0.6.2]: https://https://github.com/NintendoLink07/RepSearch/releases/tag/0.6.2
-[0.6.0]: https://https://github.com/NintendoLink07/RepSearch/releases/tag/0.6.0
-[0.5.8]: https://https://github.com/NintendoLink07/RepSearch/releases/tag/0.5.8
+[unreleased]: https://github.com/NintendoLink07/RepSearch/compare/v0.6.2...HEAD
+[0.6.2]: https://github.com/NintendoLink07/RepSearch/releases/tag/0.6.2
+[0.6.0]: https://github.com/NintendoLink07/RepSearch/releases/tag/0.6.0
+[0.5.8]: https://github.com/NintendoLink07/RepSearch/releases/tag/0.5.8
