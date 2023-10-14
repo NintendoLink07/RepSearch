@@ -65,6 +65,7 @@
         "APIDocumentation",
         "STANDING",
         "CharacterFrameTab1",
-        "ReputationDetailViewRenownButtonMixin"
+        "ReputationDetailViewRenownButtonMixin",
+        "CharacterFrameInset"
     ]
 }

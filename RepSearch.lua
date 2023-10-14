@@ -372,7 +372,7 @@ repSearch.createFrames = function(searchText)
         mainReputationFrame.headerFrame = headerFrame
 
         local expandHeaderButton = repSearch.temporaryFramePool:Acquire("UICheckButtonTemplate")
-        expandHeaderButton:SetChecked(headerArray.numOfLayerDeep == 0 or headerArray.numOfLayerDeep == 1 or headerArray.numOfLayerDeep == 2 or repSearch.defaultOptionSettings[headerArray.FactionID].value)
+        expandHeaderButton:SetChecked(headerArray.numOfLayerDeep == 0 or headerArray.numOfLayerDeep == 1 or headerArray.numOfLayerDeep == 2 or RepSearch_SavedOptionSettings[headerArray.FactionID] and RepSearch_SavedOptionSettings[headerArray.FactionID].value)
         PixelUtil.SetSize(expandHeaderButton, 25, 25)
         PixelUtil.SetPoint(expandHeaderButton, "LEFT", headerFrame, "LEFT", -2, 0)
         expandHeaderButton:SetParent(headerFrame)
@@ -387,15 +387,13 @@ repSearch.createFrames = function(searchText)
                 mainReputationFrame:MarkDirty()
             end
 
-            repSearch.defaultOptionSettings[headerArray.FactionID] = {
+            RepSearch_SavedOptionSettings[headerArray.FactionID] = {
                 key = headerArray.Name,
                 type = "checkbox",
                 title = "Expand " .. headerArray.Name .. " header",
                 id = headerArray.FactionID,
                 value = expandHeaderButton:GetChecked()
             }
-
-            RepSearch_SavedOptionSettings = repSearch.defaultOptionSettings
 
         end)
         expandHeaderButton:Show()
@@ -424,7 +422,7 @@ repSearch.createFrames = function(searchText)
             local allSubheadersFrame = repSearch.temporaryFramePool:Acquire("ResizeLayoutFrame, BackdropTemplate")
             PixelUtil.SetPoint(allSubheadersFrame, "TOPLEFT", headerFrame, "BOTTOMLEFT", 0, 0)
             allSubheadersFrame:SetParent(mainReputationFrame)
-            allSubheadersFrame:SetShown(headerArray.numOfLayerDeep == 0 or headerArray.numOfLayerDeep == 1 or headerArray.numOfLayerDeep == 2 or repSearch.defaultOptionSettings[headerArray.FactionID].value)
+            allSubheadersFrame:SetShown(headerArray.numOfLayerDeep == 0 or headerArray.numOfLayerDeep == 1 or headerArray.numOfLayerDeep == 2 or RepSearch_SavedOptionSettings[headerArray.FactionID] and RepSearch_SavedOptionSettings[headerArray.FactionID].value)
 
             headerFrame.allSubheadersFrame = allSubheadersFrame
 
@@ -448,7 +446,7 @@ repSearch.createFrames = function(searchText)
                     local expandSubheaderButton = repSearch.temporaryFramePool:Acquire("UICheckButtonTemplate")
                     PixelUtil.SetSize(expandSubheaderButton, 20, 20)
                     PixelUtil.SetPoint(expandSubheaderButton, "TOPLEFT", subheaderFrame, "TOPLEFT", 5, 2)
-                    expandSubheaderButton:SetChecked(subheaderArray.numOfLayerDeep == 1 or subheaderArray.numOfLayerDeep == 0 or headerArray.numOfLayerDeep == 0 or repSearch.defaultOptionSettings[subheaderArray.FactionID] and repSearch.defaultOptionSettings[subheaderArray.FactionID].value or false)
+                    expandSubheaderButton:SetChecked(subheaderArray.numOfLayerDeep == 1 or subheaderArray.numOfLayerDeep == 0 or headerArray.numOfLayerDeep == 0 or RepSearch_SavedOptionSettings[subheaderArray.FactionID] and RepSearch_SavedOptionSettings[subheaderArray.FactionID].value or false)
                     expandSubheaderButton:SetParent(subheaderFrame)
                     expandSubheaderButton:SetScript("OnClick", function()
                         if(expandSubheaderButton:GetChecked()) then
@@ -461,15 +459,13 @@ repSearch.createFrames = function(searchText)
                             mainReputationFrame:MarkDirty()
                         end
 
-                        repSearch.defaultOptionSettings[subheaderArray.FactionID] = {
+                        RepSearch_SavedOptionSettings[subheaderArray.FactionID] = {
                             key = subheaderArray.Name,
                             type = "checkbox",
                             title = "Expand " .. subheaderArray.Name .. " header",
                             id = subheaderArray.FactionID,
                             value = expandSubheaderButton:GetChecked()
                         }
-            
-                        RepSearch_SavedOptionSettings = repSearch.defaultOptionSettings
                     end)
 
                     local subheaderBar = repSearch.temporaryFramePool:Acquire("BackdropTemplate")
@@ -492,7 +488,7 @@ repSearch.createFrames = function(searchText)
                         local allChildrensFrame = repSearch.temporaryFramePool:Acquire("ResizeLayoutFrame, BackdropTemplate")
                         PixelUtil.SetPoint(allChildrensFrame, "TOPLEFT", subheaderBar, "BOTTOMLEFT", 10, 0)
                         allChildrensFrame:SetParent(subheaderFrame)
-                        allChildrensFrame:SetShown(subheaderArray.numOfLayerDeep == 0 or subheaderArray.numOfLayerDeep == 1 or headerArray.numOfLayerDeep == 0 or repSearch.defaultOptionSettings[subheaderArray.FactionID].value)
+                        allChildrensFrame:SetShown(subheaderArray.numOfLayerDeep == 0 or subheaderArray.numOfLayerDeep == 1 or headerArray.numOfLayerDeep == 0 or RepSearch_SavedOptionSettings[subheaderArray.FactionID] and RepSearch_SavedOptionSettings[subheaderArray.FactionID].value)
                         
                         subheaderFrame.allChildrensFrame = allChildrensFrame
 

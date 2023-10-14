@@ -1,17 +1,22 @@
 local addonName, repSearch = ...
 
-local function compareSettings()
-	for index, row in ipairs(repSearch.defaultOptionSettings) do
-		if(row.key ~= RepSearch_SavedOptionSettings[index].key or row.title ~= RepSearch_SavedOptionSettings[index].title) then
-			return false
+local function compareSettings(defaultOptions, savedSettings)
+	for key, optionEntry in pairs(defaultOptions) do
+		if(not savedSettings[key]) then
+			savedSettings[key] = {}
+			for k,v in pairs(optionEntry) do
+				savedSettings[key][k] = v
+			end
+		else
+			if(savedSettings[key]["title"] ~= optionEntry["title"]) then
+				savedSettings[key]["title"] = optionEntry["title"]
+
+			elseif(savedSettings[key]["type"] ~= optionEntry["type"]) then
+				savedSettings[key]["type"] = optionEntry["type"]
+
+			end
 		end
 	end
-
-	return true
-end
-
-repSearch.saveCurrentSettings = function()
-	RepSearch_SavedOptionSettings = repSearch.defaultOptionSettings
 end
 
 repSearch.loadSettings = function()
@@ -19,15 +24,17 @@ repSearch.loadSettings = function()
 
 	}
 
-	if(RepSearch_SavedOptionSettings) then
-		if(compareSettings()) then
-			repSearch.defaultOptionSettings = RepSearch_SavedOptionSettings
-		else
-			repSearch.saveCurrentSettings()
-		end
+	if(not RepSearch_SavedOptionSettings) then
+		RepSearch_SavedOptionSettings = repSearch.defaultOptionSettings
+		--MIOG_SavedSettings = {}
 	else
-		repSearch.saveCurrentSettings()
+		compareSettings(repSearch.defaultOptionSettings, RepSearch_SavedOptionSettings)
 	end
-
-	return repSearch.defaultOptionSettings
+	
+	
+	RepSearch_SavedOptionSettings["datestamp"] = {
+		["type"] = "interal",
+		["title"] = "Datestamp of last setting save",
+		["value"] = date("%d/%m/%y %H:%M:%S")
+	}
 end
