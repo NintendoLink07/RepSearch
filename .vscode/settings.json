@@ -78,7 +78,9 @@
         "UIDropDownMenu_AddButton",
         "PVEFrameCloseButton",
         "SearchBoxTemplate_OnTextChanged",
-        "CreateDataProvider"
+        "CreateDataProvider",
+        "CharacterFrameCloseButton",
+        "QuestFrame"
     ],
     "Lua.runtime.version": "Lua 5.1",
     "Lua.runtime.builtin": {

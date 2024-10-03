@@ -4,31 +4,51 @@ local wticc = WrapTextInColorCode
 local searchBox
 local eventReceiver = CreateFrame("Frame")
 eventReceiver:RegisterEvent("PLAYER_ENTERING_WORLD")
+--eventReceiver:RegisterEvent("MAJOR_FACTION_RENOWN_LEVEL_CHANGED")
+--eventReceiver:RegisterEvent("MAJOR_FACTION_UNLOCKED")
+--eventReceiver:RegisterEvent("QUEST_LOG_UPDATE")
+--eventReceiver:RegisterEvent("UPDATE_FACTION")
 
-local function isIDInList(id, list)
-    for _, v in ipairs(list) do
-        if(v.factionID == id) then
-            return true
-        end
-    end
-
-    return false
-end
+REPSEARCH_SETTINGS = {}
 
 local function addDataWithIndexToList(factionData, index, factionList)
     factionData.factionIndex = index;
     tinsert(factionList, factionData);
 end
 
-local function replace_char3(pos, str, r) -- https://stackoverflow.com/questions/5249629/modifying-a-character-in-a-string-in-lua
-return table.concat{str:sub(1,pos-1), r, str:sub(pos+1)}
+local category = Settings.RegisterVerticalLayoutCategory(addonName)
+local factionList = {}
+local firstActualIndex = 1
+
+local function isIDInList(id)
+    for _, v in ipairs(factionList) do
+        if(v.factionID == id) then
+            return v
+        end
+    end
+
+    return nil
 end
 
-local function events(self, event, ...)
+local function events(_, event, ...)
     if(event == "PLAYER_ENTERING_WORLD") then
         if(ReputationFrame) then
+            local setting = Settings.RegisterAddOnSetting(category, "REPSEARCH_IncludeDescriptions", "includeDescriptions", REPSEARCH_SETTINGS, "boolean", "Include descriptions", false)
+            Settings.CreateCheckbox(category, setting, "Include/exclude faction description searching (may lag on lower end machines).")
+            Settings.RegisterAddOnCategory(category)
+            
+            local settingsButton = CreateFrame("Button", "RepSearch_SettingsButton", ReputationFrame, "UIButtonTemplate")
+            settingsButton:SetSize(14, 14)
+            settingsButton:SetNormalAtlas("QuestLog-icon-setting")
+            settingsButton:SetHighlightAtlas("QuestLog-icon-setting")
+            settingsButton:SetScript("OnClick", function()
+                REPSEARCH_OpenInterfaceOptions()
+            end)
+            settingsButton:SetFrameStrata("HIGH")
+            settingsButton:SetPoint("RIGHT", CharacterFrameCloseButton, "LEFT", -2, 0)
+
             searchBox = CreateFrame("EditBox", nil, ReputationFrame, "SearchBoxTemplate")
-            searchBox:SetSize(190, 30)
+            searchBox:SetSize(190, 35)
             searchBox:SetPoint("RIGHT", ReputationFrame.filterDropdown, "LEFT", -5, 0)
             searchBox:SetScript("OnTextChanged", function(self)
                 SearchBoxTemplate_OnTextChanged(self)
@@ -43,10 +63,13 @@ local function events(self, event, ...)
                 local boxText = searchBox:GetText() or ""
                 local lastUpper, lastMiddle
                 local allMiddleAllowed, allLowsAllowed
+                local isDescription
                 --C_Reputation.ExpandAllFactionHeaders()
 
-                local factionList = {};
+                factionList = {}
+
                 for index = 1, C_Reputation.GetNumFactions() do
+                    isDescription = false
                     local factionData = C_Reputation.GetFactionDataByIndex(index);
 
                     if(factionData) then
@@ -55,7 +78,14 @@ local function events(self, event, ...)
                         end
 
                         local startIndex, endIndex = string.find(string.lower(factionData.name), string.lower(boxText))
-                        --local match = string.match(string.lower(factionData.name), string.lower(boxText))
+
+                        if(not startIndex and REPSEARCH_SETTINGS.includeDescriptions) then
+                            startIndex, endIndex = string.find(string.lower(factionData.description), string.lower(boxText))
+
+                            if(startIndex) then
+                                isDescription = true
+                            end
+                        end
                         
                         if(factionData.isHeader == true and factionData.isChild == false) then
                             lastUpper = factionData.factionID
@@ -72,24 +102,24 @@ local function events(self, event, ...)
                         if(startIndex or allMiddleAllowed or allLowsAllowed) then
                             if(boxText ~= "") then
                                 if(factionData.isHeader == false and factionData.isChild == false) then
-                                    if(not isIDInList(lastUpper, factionList)) then
+                                    if(not isIDInList(lastUpper)) then
                                         addDataWithIndexToList(C_Reputation.GetFactionDataByID(lastUpper), index, factionList)
         
                                     end
                                 elseif(factionData.isHeader == false and factionData.isChild == true) then
-                                    if(lastUpper and not isIDInList(lastUpper, factionList)) then
+                                    if(lastUpper and not isIDInList(lastUpper)) then
                                         addDataWithIndexToList(C_Reputation.GetFactionDataByID(lastUpper), index, factionList)
         
                                     end
         
-                                    if(lastMiddle and not isIDInList(lastMiddle, factionList)) then
+                                    if(lastMiddle and not isIDInList(lastMiddle)) then
                                         addDataWithIndexToList(C_Reputation.GetFactionDataByID(lastMiddle), index, factionList)
         
                                     end
                                 elseif(factionData.isHeader == true and factionData.isChild == true) then
                                     allLowsAllowed = true
 
-                                    if(lastUpper and not isIDInList(lastUpper, factionList)) then
+                                    if(lastUpper and not isIDInList(lastUpper)) then
                                         addDataWithIndexToList(C_Reputation.GetFactionDataByID(lastUpper), index, factionList)
         
                                     end
@@ -98,27 +128,42 @@ local function events(self, event, ...)
                                     allMiddleAllowed = true
 
                                 end
-
-                                if(startIndex) then
-                                    factionData.name = string.sub(factionData.name, 0, startIndex - 1) .. wticc(string.sub(factionData.name, startIndex, endIndex), "FF2ECC40") .. string.sub(factionData.name, endIndex + 1)
-                                    
-                                end
     
                             end
+
+                            if(startIndex) then
+                                if(not isDescription) then
+                                    factionData.name = string.sub(factionData.name, 0, startIndex - 1) .. wticc(string.sub(factionData.name, startIndex, endIndex), "FF2ECC40") .. string.sub(factionData.name, endIndex + 1)
+                                    
+                                --else
+                                    --factionData.description = string.sub(factionData.description, 0, startIndex - 1) .. wticc(string.sub(factionData.description, startIndex, endIndex), "FF2ECC40") .. string.sub(factionData.description, endIndex + 1)
+
+                                end
+
+                            end
+
+                            firstActualIndex = index
                             
                             addDataWithIndexToList(factionData, index, factionList)
 
                         end
+
                     end
                 end
-            
+
+                C_Reputation.SetSelectedFaction(firstActualIndex)
+
                 ReputationFrame.ScrollBox:SetDataProvider(CreateDataProvider(factionList), ScrollBoxConstants.RetainScrollPosition);
-            
-                ReputationFrame.ReputationDetailFrame:Refresh();
+                ReputationFrame.ReputationDetailFrame:Refresh()
             end
         end
+    else
 
     end
 end
 
 eventReceiver:SetScript("OnEvent", events)
+
+function REPSEARCH_OpenInterfaceOptions()
+    Settings.OpenToCategory(category:GetID())
+end
