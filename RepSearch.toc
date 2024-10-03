@@ -1,17 +1,11 @@
-## Interface: 100107
+## Interface: 110002
 ## Title: RepSearch
 ## Author: Rhany-Ravencrest
 ## IconTexture: Interface\AddOns\RepSearch\res\Logo_256.png
-## Notes: Search through your reputations
-## Version: 0.6.2
-## SavedVariablesPerCharacter: RepSearch_SavedOptionSettings
+## Notes: QoL search bar for your reputations.
+## Version: 1.0.0
 
 ## X-Website: https://github.com/NintendoLink07/RepSearch
 ## X-Curse-Project-ID: 919167
 
 RepSearch.lua
-FrameManagement.lua
-UI.lua
-UtilFunctions.lua
-PersistentData.lua
-Settings.lua

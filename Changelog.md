@@ -5,7 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog],
 and this project adheres to [Semantic Versioning].
 
-## [Unreleased]
+## [1.0.0] - 2024-10-03
+
+### Changed
+
+- Recoded the entire addon, now I just manipulate the update function of Blizzards ReputationFrame with an algorithm of my own.
+
+
 
 ## [0.6.2] - 2023-10-14
 
@@ -40,7 +46,8 @@ and this project adheres to [Semantic Versioning].
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
 
 <!-- Versions -->
-[unreleased]: https://github.com/NintendoLink07/RepSearch/compare/v0.6.2...HEAD
+[unreleased]: https://github.com/NintendoLink07/RepSearch/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/NintendoLink07/RepSearch/releases/tag/1.0.0
 [0.6.2]: https://github.com/NintendoLink07/RepSearch/releases/tag/0.6.2
 [0.6.0]: https://github.com/NintendoLink07/RepSearch/releases/tag/0.6.0
 [0.5.8]: https://github.com/NintendoLink07/RepSearch/releases/tag/0.5.8

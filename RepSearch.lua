@@ -1,260 +1,13 @@
-local addonName, repSearch = ...
+local addonName, rs = ...
+local wticc = WrapTextInColorCode
 
-local reputationDataStructure = {}
+local searchBox
+local eventReceiver = CreateFrame("Frame", "RepSearch_EventReceiver")
+eventReceiver:RegisterEvent("PLAYER_ENTERING_WORLD")
 
-repSearch.getNewIndex = function(argID)
-    for index = 1, GetNumFactions(), 1 do
-        local name, _, _, _, _, _, _, _, _, _, _, _, _, factionID = GetFactionInfo(index)
-
-        if(argID == factionID) then
-            return index
-        end
-    end
-end
-
-repSearch.createDataStructure = function()
-    reputationDataStructure = {}
-    local currentHeader, currentSubheader, currentChild
-
-    for index = 1, GetNumFactions(), 1 do
-        local name, description, standingID, barMin, barMax, barValue, atWarWith, canToggleAtWar, isHeader, isCollapsed, hasRep, isWatched, isChild, factionID, hasBonusRepGain, canBeLFGBonus  = GetFactionInfo(index)
-
-        if(isHeader and isCollapsed) then
-            ExpandFactionHeader(index)
-        end
-
-        local majorData, friendshipInfo, friendshipRanks
-
-        if(factionID) then
-            friendshipInfo = C_GossipInfo.GetFriendshipReputation(factionID)
-
-            if(friendshipInfo.friendshipFactionID ~= 0) then
-                friendshipRanks= C_GossipInfo.GetFriendshipReputationRanks(factionID)
-            end
-            if(C_Reputation.IsMajorFaction(factionID)) then
-                majorData = C_MajorFactions.GetMajorFactionData(factionID)
-            end
-        end
-
-        if(isHeader == true) then
-            if(hasRep == true and isChild) then --true true true --SUBHEADER#1 --SUBHEADER WITH REP
-                currentSubheader = #reputationDataStructure[currentHeader].Subheader + 1
-                currentChild = 0
-
-                reputationDataStructure[currentHeader].Subheader[currentSubheader] = {
-                    Index = currentSubheader,
-                    FactionIndex = index,
-                    FactionID = factionID,
-                    Name = name,
-                    Type = repSearch.C.SUBHEADER2,
-                    Layer = 2,
-                    Description = description,
-                    FactionType = majorData and "major" or friendshipInfo.friendshipFactionID ~= 0 and "friendship" or "normal",
-                    BarMin = (majorData or friendshipInfo.friendshipFactionID ~= 0) and 0 or barMin,
-                    BarMax = majorData and majorData.renownLevelThreshold or friendshipInfo.friendshipFactionID ~= 0 and (friendshipInfo.nextThreshold or friendshipInfo.maxRep) or barMax,
-                    BarValue = majorData and majorData.renownReputationEarned or friendshipInfo.friendshipFactionID ~= 0 and friendshipInfo.standing or barValue,
-                    Standing = majorData and majorData.renownLevel or friendshipInfo.friendshipFactionID ~= 0 and friendshipRanks.currentLevel or standingID,
-                    IsInactive = IsFactionInactive(index),
-                    IsWatched = isWatched,
-                    Parent = currentHeader,
-                    Children = {}
-                }
-
-            elseif(hasRep == false) then
-                if(isChild == true) then --true false true --SUBHEADER#2 --SUBHEADER WITH NO REP
-                    currentSubheader = #reputationDataStructure[currentHeader].Subheader + 1
-                    currentChild = 0
-
-                    reputationDataStructure[currentHeader].Subheader[currentSubheader] = {
-                        Index = currentSubheader,
-                        FactionIndex = index,
-                        FactionID = factionID,
-                        Name = name,
-                        Type = repSearch.C.SUBHEADER1,
-                        Layer = 2,
-                        Description = description,
-                        FactionType = majorData and "major" or friendshipInfo.friendshipFactionID ~= 0 and "friendship" or "normal",
-                        BarMin = (majorData or friendshipInfo.friendshipFactionID ~= 0) and 0 or barMin,
-                        BarMax = majorData and majorData.renownLevelThreshold or friendshipInfo.friendshipFactionID ~= 0 and (friendshipInfo.nextThreshold or friendshipInfo.maxRep) or barMax,
-                        BarValue = majorData and majorData.renownReputationEarned or friendshipInfo.friendshipFactionID ~= 0 and friendshipInfo.standing or barValue,
-                        Standing = majorData and majorData.renownLevel or friendshipInfo.friendshipFactionID ~= 0 and friendshipRanks.currentLevel or standingID,
-                        IsInactive = IsFactionInactive(index),
-                        IsWatched = isWatched,
-                        Parent = currentHeader,
-                        Children = {}
-                    }
-
-
-                elseif(isChild == false) then --true false false --HEADER --EXPANSION / GUILD HEADER
-                    currentHeader = #reputationDataStructure + 1
-
-                    reputationDataStructure[currentHeader] = {
-                        Index = currentHeader,
-                        FactionIndex = index,
-                        FactionID = factionID,
-                        Name = name,
-                        Type = repSearch.C.HEADER,
-                        Layer = 1,
-                        Description = description,
-                        FactionType = majorData and "major" or friendshipInfo.friendshipFactionID ~= 0 and "friendship" or "normal",
-                        BarMin = (majorData or friendshipInfo.friendshipFactionID ~= 0) and 0 or barMin,
-                        BarMax = majorData and majorData.renownLevelThreshold or friendshipInfo.friendshipFactionID ~= 0 and (friendshipInfo.nextThreshold or friendshipInfo.maxRep) or barMax,
-                        BarValue = majorData and majorData.renownReputationEarned or friendshipInfo.friendshipFactionID ~= 0 and friendshipInfo.standing or barValue,
-                        Standing = majorData and majorData.renownLevel or friendshipInfo.friendshipFactionID ~= 0 and friendshipRanks.currentLevel or standingID,
-                        IsInactive = IsFactionInactive(index),
-                        IsWatched = isWatched,
-                        Subheader = {},
-                    }
-
-                    currentSubheader = 0
-                end
-            elseif(hasRep == nil) then --INACTIVE HEADER
-                currentHeader = #reputationDataStructure + 1
-
-                reputationDataStructure[currentHeader] = {
-                    Index = currentHeader,
-                    FactionIndex = -1,
-                    FactionID = 9999999,
-                    Name = "Inactive",
-                    Type = repSearch.C.HEADER,
-                    Layer = 1,
-                    Description = "Inactive factions",
-                    FactionType = "normal",
-                    BarMin = 0,
-                    BarMax = 0,
-                    BarValue = 0,
-                    Standing = 1,
-                    IsInactive = false,
-                    Subheader = {},
-                }
-
-            end
-        elseif(isHeader == false) then
-            if(isChild == true) then --false false true --CHILD#2 --UNDER SUBHEADER
-                currentChild = currentChild + 1
-
-                reputationDataStructure[currentHeader].Subheader[currentSubheader].Children[currentChild] = {
-                    Index = currentChild,
-                    FactionIndex = index,
-                    FactionID = factionID,
-                    Name = name,
-                    Type = repSearch.C.CHILDSUBHEADER,
-                    Layer = 3,
-                    Description = description,
-                    FactionType = majorData and "major" or friendshipInfo.friendshipFactionID ~= 0 and "friendship" or "normal",
-                    BarMin = (majorData or friendshipInfo.friendshipFactionID ~= 0) and 0 or barMin,
-                    BarMax = majorData and majorData.renownLevelThreshold or friendshipInfo.friendshipFactionID ~= 0 and (friendshipInfo.nextThreshold or friendshipInfo.maxRep) or barMax,
-                    BarValue = majorData and majorData.renownReputationEarned or friendshipInfo.friendshipFactionID ~= 0 and friendshipInfo.standing or barValue,
-                    Standing = majorData and majorData.renownLevel or friendshipInfo.friendshipFactionID ~= 0 and friendshipRanks.currentLevel or standingID,
-                    IsInactive = IsFactionInactive(index),
-                    IsWatched = isWatched,
-                    GrandParent = currentHeader,
-                    Parent = currentSubheader,
-                }
-
-            elseif(isChild == false) then --false false false --CHILD#1 --UNDER HEADER / GUILD BAR
-                currentSubheader = #reputationDataStructure[currentHeader].Subheader + 1
-
-                reputationDataStructure[currentHeader].Subheader[currentSubheader] = {
-                    Index = currentSubheader,
-                    FactionIndex = index,
-                    FactionID = factionID,
-                    Name = name,
-                    Type = repSearch.C.CHILDHEADER,
-                    Layer = 3,
-                    Description = description,
-                    FactionType = majorData and "major" or friendshipInfo.friendshipFactionID ~= 0 and "friendship" or "normal",
-                    BarMin = (majorData or friendshipInfo.friendshipFactionID ~= 0) and 0 or barMin,
-                    BarMax = majorData and majorData.renownLevelThreshold or friendshipInfo.friendshipFactionID ~= 0 and (friendshipInfo.nextThreshold or friendshipInfo.maxRep) or barMax,
-                    BarValue = majorData and majorData.renownReputationEarned or friendshipInfo.friendshipFactionID ~= 0 and friendshipInfo.standing or barValue,
-                    Standing = majorData and majorData.renownLevel or friendshipInfo.friendshipFactionID ~= 0 and friendshipRanks.currentLevel or standingID,
-                    IsInactive = IsFactionInactive(index),
-                    IsWatched = isWatched,
-                    Parent = currentHeader,
-                }
-            end
-        end
-    end
-end
-
-local function setUpStatusBar(frame, array)
-    local repLevelText = repSearch.temporaryFontStringPool:Acquire()
-    PixelUtil.SetPoint(repLevelText, "RIGHT", frame, "LEFT", -2, 0)
-    repLevelText:SetParent(frame)
-    repLevelText:SetDrawLayer("ARTWORK")
-    repLevelText:Show()
-
-    local statusBar = repSearch.temporaryStatusBarPool:Acquire("BackdropTemplate")
-    PixelUtil.SetSize(statusBar, frame:GetWidth() - 2, frame:GetHeight() - 2)
-    PixelUtil.SetPoint(statusBar, "CENTER", frame, "CENTER", 0, 0)
-    statusBar:SetParent(frame)
-    statusBar:Show()
-
-    local colorRGBA = nil
-    local friendshipInfo = C_GossipInfo.GetFriendshipReputation(array.FactionID)
-    local IsMajorFaction = C_Reputation.IsMajorFaction(array.FactionID)
-
-    if(friendshipInfo.friendshipFactionID ~= 0) then
-        local rankInfo = C_GossipInfo.GetFriendshipReputationRanks(friendshipInfo.friendshipFactionID)
-
-        statusBar:SetMinMaxValues(0, friendshipInfo.nextThreshold or friendshipInfo.maxRep)
-        statusBar:SetValue(friendshipInfo.standing)
-        colorRGBA = {CreateColorFromHexString(repSearch.C.AQUA):GetRGBA()}
-        repLevelText:SetText(rankInfo.currentLevel .. "/" .. rankInfo.maxLevel)
-
-    elseif(IsMajorFaction) then
-        local majorFactionData = C_MajorFactions.GetMajorFactionData(array.FactionID)
-
-        if(majorFactionData) then
-            statusBar:SetMinMaxValues(0, majorFactionData.renownLevelThreshold)
-            statusBar:SetValue(majorFactionData.renownReputationEarned)
-            colorRGBA = {CreateColorFromHexString(repSearch.C.BLUE):GetRGBA()}
-            repLevelText:SetText(majorFactionData.renownLevel)
-        end
-
-    else
-        statusBar:SetMinMaxValues(array.BarMin < 0 and array.BarMin or 0, array.BarMax)
-        statusBar:SetValue(array.BarValue)
-
-        if(array.Standing > 4) then
-            colorRGBA = {CreateColorFromHexString(repSearch.C.GREEN):GetRGBA()}
-
-        elseif(array.Standing == 4 or array.Standing == 0) then
-            colorRGBA = {CreateColorFromHexString(repSearch.C.YELLOW):GetRGBA()}
-
-        elseif(array.Standing == 3) then
-            colorRGBA = {CreateColorFromHexString(repSearch.C.ORANGE):GetRGBA()}
-
-        elseif(array.Standing == 2) then
-            colorRGBA = {CreateColorFromHexString(repSearch.C.MAROON):GetRGBA()}
-
-        elseif(array.Standing == 1) then
-            colorRGBA = {CreateColorFromHexString(repSearch.C.RED):GetRGBA()}
-
-        end
-        
-        repLevelText:SetText(array.Standing.."/8")
-    end
-
-    if(colorRGBA) then
-        statusBar:SetStatusBarColor(unpack(colorRGBA))
-        repSearch.createFrameBorder(frame, 1, 0, 0, 0, 1)
-
-        colorRGBA[4] = 0.1
-        repSearch.createFrameWithBackgroundAndBorder(frame, 1, unpack(colorRGBA))
-    end
-
-    local childrenBarText = repSearch.temporaryFontStringPool:Acquire()
-    PixelUtil.SetPoint(childrenBarText, "LEFT", statusBar, "LEFT", 3, 0)
-    childrenBarText:SetText(string.sub(array.Name, 1, 25) .. ": " .. statusBar:GetValue() .. "/" .. select(2, statusBar:GetMinMaxValues()))
-    childrenBarText:SetParent(statusBar)
-    childrenBarText:SetDrawLayer("ARTWORK")
-    childrenBarText:Show()
-end
-
-local function checkOrderedTableForValue(tbl, value)
-    for k, v in ipairs(tbl) do
-        if(v.Name == value) then
+local function isIDInList(id, list)
+    for _, v in ipairs(list) do
+        if(v.factionID == id) then
             return true
         end
     end
@@ -262,291 +15,97 @@ local function checkOrderedTableForValue(tbl, value)
     return false
 end
 
-local function checkForString(filteredList, searchText, parentArray, childArray, index)
-
-    if(repSearch.findInString(childArray.Name, searchText)) then
-        if(checkOrderedTableForValue(filteredList, parentArray.Name) == false) then
-            if(childArray.Parent and not childArray.GrandParent) then
-
-                parentArray.numOfLayerDeep = 1
-                childArray.numOfLayerDeep = 0
-
-            elseif(childArray.GrandParent and childArray.Parent) then
-
-                parentArray.numOfLayerDeep = 2
-                parentArray.Subheader[index].numOfLayerDeep = 1
-                childArray.numOfLayerDeep = 0
-
-            elseif(not childArray.Parent and not childArray.GrandParent) then
-
-                parentArray.numOfLayerDeep = 0
-                
-            end
-
-            filteredList[#filteredList+1] = parentArray
-        end
-    end
+local function addDataWithIndexToList(factionData, index, factionList)
+    factionData.factionIndex = index;
+    tinsert(factionList, factionData);
 end
 
-local function sortTableForMajorFactions(key1, key2)
-    if(key1 and key2) then
-        if(key1.FactionType == "major" and key2.FactionType == "major" or key1.FactionType == "normal" and key2.FactionType == "normal" or key1.FactionType == "friendship" and key2.FactionType == "friendship") then
+local function events(self, event, ...)
+    if(event == "PLAYER_ENTERING_WORLD") then
+        if(ReputationFrame) then
+            searchBox = CreateFrame("EditBox", nil, ReputationFrame, "SearchBoxTemplate")
+            searchBox:SetSize(190, 30)
+            searchBox:SetPoint("RIGHT", ReputationFrame.filterDropdown, "LEFT", -5, 0)
+            searchBox:SetScript("OnTextChanged", function(self)
+                SearchBoxTemplate_OnTextChanged(self)
 
-            if(key1.Standing == key2.Standing) then
-                if(key1.BarValue == key2.BarValue) then
-                    return key1.Name < key2.Name
-                else
-                    return key1.BarValue > key2.BarValue
-                end
-            else
-                return key1.Standing > key2.Standing
-            end
-        elseif(key1.FactionType == "major" and key2.FactionType == "normal") then
-            return true
-        elseif(key1.FactionType == "major" and key2.FactionType == "friendship") then
-            return true
-        elseif(key1.FactionType == "friendship" and key2.FactionType == "major") then
-            return false
-        elseif(key1.FactionType == "friendship" and key2.FactionType == "normal") then
-            return false
-        elseif(key1.FactionType == "normal" and key2.FactionType == "major") then
-            return false
-        elseif(key1.FactionType == "normal" and key2.FactionType == "friendship") then
-            return true
-        end
-    else
-    end
-end
+                ReputationFrame:Update()
 
-repSearch.createFrames = function(searchText)
-    repSearch.releaseAllTemporaryPools()
+            end)
 
-    local filteredList
+            ReputationFrame.Update = function()
+                ReputationFrame.ScrollBox:Flush()
 
-    searchText = string.lower(searchText)
+                local boxText = searchBox:GetText() or ""
+                local lastUpper, lastMiddle
+                local allChildrenAllowed = false
+                --C_Reputation.ExpandAllFactionHeaders()
 
-    if(searchText and searchText ~= "") then
-        filteredList = {}
+                local factionList = {};
+                for index = 1, C_Reputation.GetNumFactions() do
+                    local factionData = C_Reputation.GetFactionDataByIndex(index);
 
-        for _, headerArray in ipairs(reputationDataStructure) do
-            headerArray.numOfLayerDeep = -1
-            checkForString(filteredList, searchText, headerArray, headerArray)
-
-            if(headerArray.Subheader) then
-                for sIndex, subheaderArray in ipairs(headerArray.Subheader) do
-                    subheaderArray.numOfLayerDeep = -1
-                    checkForString(filteredList, searchText, headerArray, subheaderArray)
-
-                    if(subheaderArray.Children) then
-                        for _, childrenArray in ipairs(subheaderArray.Children) do
-                            childrenArray.numOfLayerDeep = -1
-                            checkForString(filteredList, searchText, headerArray, childrenArray, sIndex)
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    local lastMainReputationFrame = nil
-
-    local rowHeight = 20
-
-    for _, headerArray in ipairs(filteredList or reputationDataStructure) do
-
-        local mainReputationFrame = repSearch.temporaryFramePool:Acquire("ResizeLayoutFrame, BackdropTemplate")
-        PixelUtil.SetPoint(mainReputationFrame, "TOPLEFT", lastMainReputationFrame or repSearch.mainFrame.mainScrollFrame.mainContainer, lastMainReputationFrame and "BOTTOMLEFT" or "TOPLEFT", lastMainReputationFrame and 0 or 4, lastMainReputationFrame and -4 or 0)
-        mainReputationFrame:SetWidth(repSearch.mainFrame.mainScrollFrame.mainContainer:GetWidth())
-        mainReputationFrame:SetParent(repSearch.mainFrame.mainScrollFrame.mainContainer)
-        mainReputationFrame:SetFrameStrata("HIGH")
-        mainReputationFrame:Hide()
-
-        repSearch.mainFrame.mainScrollFrame.mainContainer[headerArray.Name] = mainReputationFrame
-
-        local headerFrame = repSearch.temporaryFramePool:Acquire("BackdropTemplate")
-        PixelUtil.SetPoint(headerFrame, "TOPLEFT", mainReputationFrame, "TOPLEFT", 0, 0)
-        PixelUtil.SetSize(headerFrame, 300, rowHeight)
-        headerFrame:SetParent(mainReputationFrame)
-        headerFrame:Show()
-
-        mainReputationFrame.headerFrame = headerFrame
-
-        local expandHeaderButton = repSearch.temporaryFramePool:Acquire("UICheckButtonTemplate")
-        expandHeaderButton:SetChecked(headerArray.numOfLayerDeep == 0 or headerArray.numOfLayerDeep == 1 or headerArray.numOfLayerDeep == 2 or RepSearch_SavedOptionSettings[headerArray.FactionID] and RepSearch_SavedOptionSettings[headerArray.FactionID].value)
-        PixelUtil.SetSize(expandHeaderButton, 25, 25)
-        PixelUtil.SetPoint(expandHeaderButton, "LEFT", headerFrame, "LEFT", -2, 0)
-        expandHeaderButton:SetParent(headerFrame)
-        expandHeaderButton:SetScript("OnClick", function()
-            if(expandHeaderButton:GetChecked()) then
-                mainReputationFrame.headerFrame.allSubheadersFrame:Show()
-
-                mainReputationFrame:MarkDirty()
-            else
-                mainReputationFrame.headerFrame.allSubheadersFrame:Hide()
-
-                mainReputationFrame:MarkDirty()
-            end
-
-            RepSearch_SavedOptionSettings[headerArray.FactionID] = {
-                key = headerArray.Name,
-                type = "checkbox",
-                title = "Expand " .. headerArray.Name .. " header",
-                id = headerArray.FactionID,
-                value = expandHeaderButton:GetChecked()
-            }
-
-        end)
-        expandHeaderButton:Show()
-
-        headerFrame.expandButton = expandHeaderButton
-
-        local headerBar = repSearch.temporaryFramePool:Acquire("BackdropTemplate")
-        PixelUtil.SetPoint(headerBar, "LEFT", expandHeaderButton, "RIGHT", -5, 0)
-        PixelUtil.SetSize(headerBar, headerFrame:GetWidth(), rowHeight)
-        headerBar:SetParent(headerFrame)
-        headerBar:Show()
-
-        headerFrame.bar = headerBar
-
-        local headerBarText = repSearch.temporaryFontStringPool:Acquire()
-        PixelUtil.SetPoint(headerBarText, "LEFT", headerBar, "LEFT", 5, 0)
-        headerBarText:SetText(headerArray.Name)
-        headerBarText:SetParent(headerBar)
-        headerBarText:Show()
-
-        headerFrame.bar.text = headerBarText
-
-        if(headerArray.Subheader) then
-            table.sort(headerArray.Subheader, sortTableForMajorFactions)
-
-            local allSubheadersFrame = repSearch.temporaryFramePool:Acquire("ResizeLayoutFrame, BackdropTemplate")
-            PixelUtil.SetPoint(allSubheadersFrame, "TOPLEFT", headerFrame, "BOTTOMLEFT", 0, 0)
-            allSubheadersFrame:SetParent(mainReputationFrame)
-            allSubheadersFrame:SetShown(headerArray.numOfLayerDeep == 0 or headerArray.numOfLayerDeep == 1 or headerArray.numOfLayerDeep == 2 or RepSearch_SavedOptionSettings[headerArray.FactionID] and RepSearch_SavedOptionSettings[headerArray.FactionID].value)
-
-            headerFrame.allSubheadersFrame = allSubheadersFrame
-
-            local lastSubheaderFrame = nil
-
-            for _, subheaderArray in ipairs(headerArray.Subheader) do
-                
-                if(filteredList == nil or subheaderArray.numOfLayerDeep == 1 or subheaderArray.numOfLayerDeep == 0 or headerArray.numOfLayerDeep == 0) then
-
-                    local subheaderFrame = repSearch.temporaryFramePool:Acquire("ResizeLayoutFrame, BackdropTemplate")
-                    PixelUtil.SetPoint(subheaderFrame, "TOPLEFT", lastSubheaderFrame or allSubheadersFrame, lastSubheaderFrame and "BOTTOMLEFT" or "TOPLEFT", 0, 0)
-                    subheaderFrame:SetParent(allSubheadersFrame)
-                    subheaderFrame:SetMouseClickEnabled(true)
-
-                    subheaderFrame:SetScript("OnMouseDown", function()
-                        repSearch.mainFrame.detailFrame.InsertData(subheaderArray.FactionIndex, "subheader")
-                        repSearch.mainFrame.detailFrame:Show()
-                    end)
-                    subheaderFrame:Show()
-
-                    local expandSubheaderButton = repSearch.temporaryFramePool:Acquire("UICheckButtonTemplate")
-                    PixelUtil.SetSize(expandSubheaderButton, 20, 20)
-                    PixelUtil.SetPoint(expandSubheaderButton, "TOPLEFT", subheaderFrame, "TOPLEFT", 5, 2)
-                    expandSubheaderButton:SetChecked(subheaderArray.numOfLayerDeep == 1 or subheaderArray.numOfLayerDeep == 0 or headerArray.numOfLayerDeep == 0 or RepSearch_SavedOptionSettings[subheaderArray.FactionID] and RepSearch_SavedOptionSettings[subheaderArray.FactionID].value or false)
-                    expandSubheaderButton:SetParent(subheaderFrame)
-                    expandSubheaderButton:SetScript("OnClick", function()
-                        if(expandSubheaderButton:GetChecked()) then
-                            subheaderFrame.allChildrensFrame:Show()
-            
-                            mainReputationFrame:MarkDirty()
-                        else
-                            subheaderFrame.allChildrensFrame:Hide()
-            
-                            mainReputationFrame:MarkDirty()
+                    if(factionData) then
+                        if(factionData.isCollapsed) then
+                            C_Reputation.ExpandFactionHeader(index)
                         end
 
-                        RepSearch_SavedOptionSettings[subheaderArray.FactionID] = {
-                            key = subheaderArray.Name,
-                            type = "checkbox",
-                            title = "Expand " .. subheaderArray.Name .. " header",
-                            id = subheaderArray.FactionID,
-                            value = expandSubheaderButton:GetChecked()
-                        }
-                    end)
-
-                    local subheaderBar = repSearch.temporaryFramePool:Acquire("BackdropTemplate")
-                    PixelUtil.SetPoint(subheaderBar, "LEFT", expandSubheaderButton, "RIGHT", 20, 0)
-                    PixelUtil.SetSize(subheaderBar, 300-40, rowHeight)
-                    subheaderBar:SetParent(subheaderFrame)
-                    subheaderBar:Show()
-
-                    setUpStatusBar(subheaderBar, subheaderArray)
-
-                    lastSubheaderFrame = subheaderFrame
-                    
-                    if(subheaderArray.Children) then
-                        local lastChildrenFrame = nil
+                        local foundText = string.find(string.lower(factionData.name), string.lower(boxText))
                         
-                        expandSubheaderButton:Show()
-                        
-                        table.sort(subheaderArray.Children, sortTableForMajorFactions)
-                        
-                        local allChildrensFrame = repSearch.temporaryFramePool:Acquire("ResizeLayoutFrame, BackdropTemplate")
-                        PixelUtil.SetPoint(allChildrensFrame, "TOPLEFT", subheaderBar, "BOTTOMLEFT", 10, 0)
-                        allChildrensFrame:SetParent(subheaderFrame)
-                        allChildrensFrame:SetShown(subheaderArray.numOfLayerDeep == 0 or subheaderArray.numOfLayerDeep == 1 or headerArray.numOfLayerDeep == 0 or RepSearch_SavedOptionSettings[subheaderArray.FactionID] and RepSearch_SavedOptionSettings[subheaderArray.FactionID].value)
-                        
-                        subheaderFrame.allChildrensFrame = allChildrensFrame
+                        if(factionData.isHeader == true and factionData.isChild == false) then
+                            lastUpper = factionData.factionID
+                            lastMiddle = nil
+                            allChildrenAllowed = false
+                            
+                        elseif(factionData.isHeader == true and factionData.isChild == true or factionData.isHeader == false and factionData.isChild == false) then
+                            lastMiddle = factionData.factionID
+                            allChildrenAllowed = false
 
-                        for _, childrenArray in ipairs(subheaderArray.Children) do
-                            if(filteredList == nil or subheaderArray.numOfLayerDeep == 0 or childrenArray.numOfLayerDeep == 0 and subheaderArray.numOfLayerDeep == 1 or headerArray.numOfLayerDeep == 0) then
-                                local childrenFrame = repSearch.temporaryFramePool:Acquire("BackdropTemplate")
-                                PixelUtil.SetSize(childrenFrame, 250, 20)
-                                PixelUtil.SetPoint(childrenFrame, "TOPLEFT", lastChildrenFrame or allChildrensFrame, lastChildrenFrame and "BOTTOMLEFT" or "TOPLEFT", 0, 0)
-                                childrenFrame:SetParent(allChildrensFrame)
-                                childrenFrame:SetMouseClickEnabled(true)
-                                childrenFrame:SetScript("OnMouseDown", function()
-                                    childrenFrame:Show()
-                                    repSearch.mainFrame.detailFrame.InsertData(childrenArray.FactionIndex, "children")
-                                    repSearch.mainFrame.detailFrame:Show()
-                                end)
-                                childrenFrame:Show()
-
-                                local childrenBar = repSearch.temporaryFramePool:Acquire("BackdropTemplate")
-                                PixelUtil.SetSize(childrenBar, childrenFrame:GetWidth(), rowHeight)
-                                PixelUtil.SetPoint(childrenBar, "TOPLEFT", childrenFrame, "TOPLEFT", 0, 0)
-                                childrenBar:SetParent(childrenFrame)
-                                childrenBar:Show()
-
-                                setUpStatusBar(childrenBar, childrenArray)
-
-                                lastChildrenFrame = childrenFrame
-                            end
                         end
 
-                        allChildrensFrame:MarkDirty()
-                    end
-                        
-                end
-            end
-        end
-
-        lastMainReputationFrame = mainReputationFrame
+                        if(foundText or allChildrenAllowed) then
+                            if(boxText ~= "") then
+                                if(factionData.isHeader == false and factionData.isChild == false) then
+                                    if(not isIDInList(lastUpper, factionList)) then
+                                        addDataWithIndexToList(C_Reputation.GetFactionDataByID(lastUpper), index, factionList)
         
-        mainReputationFrame:Show()
-        mainReputationFrame:MarkDirty()
+                                    end
+                                elseif(factionData.isHeader == false and factionData.isChild == true) then
+                                    if(lastUpper and not isIDInList(lastUpper, factionList)) then
+                                        addDataWithIndexToList(C_Reputation.GetFactionDataByID(lastUpper), index, factionList)
+        
+                                    end
+        
+                                    if(lastMiddle and not isIDInList(lastMiddle, factionList)) then
+                                        addDataWithIndexToList(C_Reputation.GetFactionDataByID(lastMiddle), index, factionList)
+        
+                                    end
+                                elseif(factionData.isHeader == true and factionData.isChild == true) then
+                                    allChildrenAllowed = true
 
-    end
-end
+                                    if(lastUpper and not isIDInList(lastUpper, factionList)) then
+                                        addDataWithIndexToList(C_Reputation.GetFactionDataByID(lastUpper), index, factionList)
+        
+                                    end
 
-repSearch.OnEvent = function(self, event, ...)
-    if(event == "PLAYER_LOGIN") then
-        repSearch.releaseAllPersistentPools()
-        repSearch.createRepSearch()
-    elseif(event == "UPDATE_FACTION") then
-        if(repSearch.F.ADDON_VISIBLE == true) then
-            repSearch.createDataStructure()
+                                end
+                            end
+                            
+                            addDataWithIndexToList(factionData, index, factionList)
 
-            if(repSearch.mainFrame.mainScrollFrame) then
-                repSearch.createFrames(tostring(repSearch.mainFrame.searchBar:GetText()))
+                            print(factionData.name, factionData.isHeader, factionData.isChild, lastUpper and C_Reputation.GetFactionDataByID(lastUpper).name, isIDInList(lastUpper, factionList), lastMiddle and C_Reputation.GetFactionDataByID(lastMiddle).name, isIDInList(lastMiddle, factionList))
+
+                        end
+                    end
+                end
+            
+                ReputationFrame.ScrollBox:SetDataProvider(CreateDataProvider(factionList), ScrollBoxConstants.RetainScrollPosition);
+            
+                ReputationFrame.ReputationDetailFrame:Refresh();
             end
         end
-    elseif(event == "PLAYER_ENTERING_WORLD") then
-        repSearch.releaseAllTemporaryPools()
-        repSearch.createDataStructure()
+
     end
 end
+
+eventReceiver:SetScript("OnEvent", events)
