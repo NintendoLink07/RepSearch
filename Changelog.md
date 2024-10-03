@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning].
 
 - Recoded the entire addon, now I just manipulate the update function of Blizzards ReputationFrame with an algorithm of my own.
 
+- Searching for something now colors the part of the name of the faction you were searching for (e.g. searching for "War" colors the "War" part in "The War Within" green).
+
 
 
 ## [0.6.2] - 2023-10-14
@@ -24,6 +26,7 @@ and this project adheres to [Semantic Versioning].
 - After your first install of the addon it would try to load some settings which obviously aren't there yet
 
 
+
 ## [0.6.0] - 2023-10-04
 
 ### Added
@@ -33,6 +36,7 @@ and this project adheres to [Semantic Versioning].
 ### Fixed
 
 - Minor UI fixes
+
 
 
 ## [0.5.8] - 2023-10-03

@@ -2,7 +2,7 @@ local addonName, rs = ...
 local wticc = WrapTextInColorCode
 
 local searchBox
-local eventReceiver = CreateFrame("Frame", "RepSearch_EventReceiver")
+local eventReceiver = CreateFrame("Frame")
 eventReceiver:RegisterEvent("PLAYER_ENTERING_WORLD")
 
 local function isIDInList(id, list)
@@ -18,6 +18,10 @@ end
 local function addDataWithIndexToList(factionData, index, factionList)
     factionData.factionIndex = index;
     tinsert(factionList, factionData);
+end
+
+local function replace_char3(pos, str, r) -- https://stackoverflow.com/questions/5249629/modifying-a-character-in-a-string-in-lua
+return table.concat{str:sub(1,pos-1), r, str:sub(pos+1)}
 end
 
 local function events(self, event, ...)
@@ -38,7 +42,7 @@ local function events(self, event, ...)
 
                 local boxText = searchBox:GetText() or ""
                 local lastUpper, lastMiddle
-                local allChildrenAllowed = false
+                local allMiddleAllowed, allLowsAllowed
                 --C_Reputation.ExpandAllFactionHeaders()
 
                 local factionList = {};
@@ -50,20 +54,22 @@ local function events(self, event, ...)
                             C_Reputation.ExpandFactionHeader(index)
                         end
 
-                        local foundText = string.find(string.lower(factionData.name), string.lower(boxText))
+                        local startIndex, endIndex = string.find(string.lower(factionData.name), string.lower(boxText))
+                        --local match = string.match(string.lower(factionData.name), string.lower(boxText))
                         
                         if(factionData.isHeader == true and factionData.isChild == false) then
                             lastUpper = factionData.factionID
                             lastMiddle = nil
-                            allChildrenAllowed = false
+                            allMiddleAllowed = false
+                            allLowsAllowed = false
                             
                         elseif(factionData.isHeader == true and factionData.isChild == true or factionData.isHeader == false and factionData.isChild == false) then
                             lastMiddle = factionData.factionID
-                            allChildrenAllowed = false
+                            allLowsAllowed = false
 
                         end
 
-                        if(foundText or allChildrenAllowed) then
+                        if(startIndex or allMiddleAllowed or allLowsAllowed) then
                             if(boxText ~= "") then
                                 if(factionData.isHeader == false and factionData.isChild == false) then
                                     if(not isIDInList(lastUpper, factionList)) then
@@ -81,19 +87,26 @@ local function events(self, event, ...)
         
                                     end
                                 elseif(factionData.isHeader == true and factionData.isChild == true) then
-                                    allChildrenAllowed = true
+                                    allLowsAllowed = true
 
                                     if(lastUpper and not isIDInList(lastUpper, factionList)) then
                                         addDataWithIndexToList(C_Reputation.GetFactionDataByID(lastUpper), index, factionList)
         
                                     end
 
+                                elseif(factionData.isHeader == true and factionData.isChild == false) then
+                                    allMiddleAllowed = true
+
                                 end
+
+                                if(startIndex) then
+                                    factionData.name = string.sub(factionData.name, 0, startIndex - 1) .. wticc(string.sub(factionData.name, startIndex, endIndex), "FF2ECC40") .. string.sub(factionData.name, endIndex + 1)
+                                    
+                                end
+    
                             end
                             
                             addDataWithIndexToList(factionData, index, factionList)
-
-                            print(factionData.name, factionData.isHeader, factionData.isChild, lastUpper and C_Reputation.GetFactionDataByID(lastUpper).name, isIDInList(lastUpper, factionList), lastMiddle and C_Reputation.GetFactionDataByID(lastMiddle).name, isIDInList(lastMiddle, factionList))
 
                         end
                     end
