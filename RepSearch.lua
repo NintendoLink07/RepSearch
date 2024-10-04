@@ -30,132 +30,141 @@ local function isIDInList(id)
     return nil
 end
 
-local function events(_, event, ...)
-    if(event == "PLAYER_ENTERING_WORLD") then
-        if(ReputationFrame) then
-            local setting = Settings.RegisterAddOnSetting(category, "REPSEARCH_IncludeDescriptions", "includeDescriptions", REPSEARCH_SETTINGS, "boolean", "Include descriptions", false)
-            Settings.CreateCheckbox(category, setting, "Include/exclude faction description searching (may lag on lower end machines).")
-            Settings.RegisterAddOnCategory(category)
-            
-            local settingsButton = CreateFrame("Button", "RepSearch_SettingsButton", ReputationFrame, "UIButtonTemplate")
-            settingsButton:SetSize(14, 14)
-            settingsButton:SetNormalAtlas("QuestLog-icon-setting")
-            settingsButton:SetHighlightAtlas("QuestLog-icon-setting")
-            settingsButton:SetScript("OnClick", function()
-                REPSEARCH_OpenInterfaceOptions()
-            end)
-            settingsButton:SetFrameStrata("HIGH")
-            settingsButton:SetPoint("RIGHT", CharacterFrameCloseButton, "LEFT", -2, 0)
-
-            searchBox = CreateFrame("EditBox", nil, ReputationFrame, "SearchBoxTemplate")
-            searchBox:SetSize(190, 35)
-            searchBox:SetPoint("RIGHT", ReputationFrame.filterDropdown, "LEFT", -5, 0)
-            searchBox:SetScript("OnTextChanged", function(self)
-                SearchBoxTemplate_OnTextChanged(self)
-
-                ReputationFrame:Update()
-
-            end)
-
-            ReputationFrame.Update = function()
-                ReputationFrame.ScrollBox:Flush()
-
-                local boxText = searchBox:GetText() or ""
-                local lastUpper, lastMiddle
-                local allMiddleAllowed, allLowsAllowed
-                local isDescription
-                --C_Reputation.ExpandAllFactionHeaders()
-
-                factionList = {}
-
-                for index = 1, C_Reputation.GetNumFactions() do
-                    isDescription = false
-                    local factionData = C_Reputation.GetFactionDataByIndex(index);
-
-                    if(factionData) then
-                        if(factionData.isCollapsed) then
-                            C_Reputation.ExpandFactionHeader(index)
+local function loadRepSearch()
+    if(ReputationFrame) then
+        local setting = Settings.RegisterAddOnSetting(category, "REPSEARCH_IncludeDescriptions", "includeDescriptions", REPSEARCH_SETTINGS, "boolean", "Include descriptions", false)
+        Settings.CreateCheckbox(category, setting, "Include/exclude faction description searching (may lag on lower end machines).")
+        Settings.RegisterAddOnCategory(category)
+        
+        local settingsButton = CreateFrame("Button", "RepSearch_SettingsButton", ReputationFrame, "UIButtonTemplate")
+        settingsButton:SetSize(14, 14)
+        settingsButton:SetNormalAtlas("QuestLog-icon-setting")
+        settingsButton:SetHighlightAtlas("QuestLog-icon-setting")
+        settingsButton:SetScript("OnClick", function()
+            REPSEARCH_OpenInterfaceOptions()
+        end)
+        settingsButton:SetFrameStrata("HIGH")
+        settingsButton:SetPoint("RIGHT", CharacterFrameCloseButton, "LEFT", -2, 0)
+    
+        searchBox = CreateFrame("EditBox", nil, ReputationFrame, "SearchBoxTemplate")
+        searchBox:SetSize(190, 35)
+        searchBox:SetPoint("RIGHT", ReputationFrame.filterDropdown, "LEFT", -5, 0)
+        searchBox:SetScript("OnTextChanged", function(self)
+            SearchBoxTemplate_OnTextChanged(self)
+    
+            ReputationFrame:Update()
+    
+        end)
+    
+        ReputationFrame.Update = function()
+            ReputationFrame.ScrollBox:Flush()
+    
+            local boxText = searchBox:GetText() or ""
+            local lastUpper, lastMiddle
+            local allMiddleAllowed, allLowsAllowed
+            local isDescription
+            --C_Reputation.ExpandAllFactionHeaders()
+    
+            factionList = {}
+    
+            for index = 1, C_Reputation.GetNumFactions() do
+                isDescription = false
+                local factionData = C_Reputation.GetFactionDataByIndex(index);
+    
+                if(factionData) then
+                    if(factionData.isCollapsed) then
+                        C_Reputation.ExpandFactionHeader(index)
+                    end
+    
+                    local startIndex, endIndex = string.find(string.lower(factionData.name), string.lower(boxText))
+    
+                    if(not startIndex and REPSEARCH_SETTINGS.includeDescriptions) then
+                        startIndex, endIndex = string.find(string.lower(factionData.description), string.lower(boxText))
+    
+                        if(startIndex) then
+                            isDescription = true
                         end
-
-                        local startIndex, endIndex = string.find(string.lower(factionData.name), string.lower(boxText))
-
-                        if(not startIndex and REPSEARCH_SETTINGS.includeDescriptions) then
-                            startIndex, endIndex = string.find(string.lower(factionData.description), string.lower(boxText))
-
-                            if(startIndex) then
-                                isDescription = true
-                            end
-                        end
+                    end
+                    
+                    if(factionData.isHeader == true and factionData.isChild == false) then
+                        lastUpper = factionData.factionID
+                        lastMiddle = nil
+                        allMiddleAllowed = false
+                        allLowsAllowed = false
                         
-                        if(factionData.isHeader == true and factionData.isChild == false) then
-                            lastUpper = factionData.factionID
-                            lastMiddle = nil
-                            allMiddleAllowed = false
-                            allLowsAllowed = false
-                            
-                        elseif(factionData.isHeader == true and factionData.isChild == true or factionData.isHeader == false and factionData.isChild == false) then
-                            lastMiddle = factionData.factionID
-                            allLowsAllowed = false
-
-                        end
-
-                        if(startIndex or allMiddleAllowed or allLowsAllowed) then
-                            if(boxText ~= "") then
-                                if(factionData.isHeader == false and factionData.isChild == false) then
-                                    if(not isIDInList(lastUpper)) then
-                                        addDataWithIndexToList(C_Reputation.GetFactionDataByID(lastUpper), index, factionList)
-        
-                                    end
-                                elseif(factionData.isHeader == false and factionData.isChild == true) then
-                                    if(lastUpper and not isIDInList(lastUpper)) then
-                                        addDataWithIndexToList(C_Reputation.GetFactionDataByID(lastUpper), index, factionList)
-        
-                                    end
-        
-                                    if(lastMiddle and not isIDInList(lastMiddle)) then
-                                        addDataWithIndexToList(C_Reputation.GetFactionDataByID(lastMiddle), index, factionList)
-        
-                                    end
-                                elseif(factionData.isHeader == true and factionData.isChild == true) then
-                                    allLowsAllowed = true
-
-                                    if(lastUpper and not isIDInList(lastUpper)) then
-                                        addDataWithIndexToList(C_Reputation.GetFactionDataByID(lastUpper), index, factionList)
-        
-                                    end
-
-                                elseif(factionData.isHeader == true and factionData.isChild == false) then
-                                    allMiddleAllowed = true
-
+                    elseif(factionData.isHeader == true and factionData.isChild == true or factionData.isHeader == false and factionData.isChild == false) then
+                        lastMiddle = factionData.factionID
+                        allLowsAllowed = false
+    
+                    end
+    
+                    if(startIndex or allMiddleAllowed or allLowsAllowed) then
+                        if(boxText ~= "") then
+                            if(factionData.isHeader == false and factionData.isChild == false) then
+                                if(not isIDInList(lastUpper)) then
+                                    addDataWithIndexToList(C_Reputation.GetFactionDataByID(lastUpper), index, factionList)
+    
+                                end
+                            elseif(factionData.isHeader == false and factionData.isChild == true) then
+                                if(lastUpper and not isIDInList(lastUpper)) then
+                                    addDataWithIndexToList(C_Reputation.GetFactionDataByID(lastUpper), index, factionList)
+    
                                 end
     
-                            end
-
-                            if(startIndex) then
-                                if(not isDescription) then
-                                    factionData.name = string.sub(factionData.name, 0, startIndex - 1) .. wticc(string.sub(factionData.name, startIndex, endIndex), "FF2ECC40") .. string.sub(factionData.name, endIndex + 1)
-                                    
-                                --else
-                                    --factionData.description = string.sub(factionData.description, 0, startIndex - 1) .. wticc(string.sub(factionData.description, startIndex, endIndex), "FF2ECC40") .. string.sub(factionData.description, endIndex + 1)
-
+                                if(lastMiddle and not isIDInList(lastMiddle)) then
+                                    addDataWithIndexToList(C_Reputation.GetFactionDataByID(lastMiddle), index, factionList)
+    
                                 end
-
+                            elseif(factionData.isHeader == true and factionData.isChild == true) then
+                                allLowsAllowed = true
+    
+                                if(lastUpper and not isIDInList(lastUpper)) then
+                                    addDataWithIndexToList(C_Reputation.GetFactionDataByID(lastUpper), index, factionList)
+    
+                                end
+    
+                            elseif(factionData.isHeader == true and factionData.isChild == false) then
+                                allMiddleAllowed = true
+    
                             end
-
-                            firstActualIndex = index
-                            
-                            addDataWithIndexToList(factionData, index, factionList)
-
+    
                         end
-
+    
+                        if(startIndex) then
+                            if(not isDescription) then
+                                factionData.name = string.sub(factionData.name, 0, startIndex - 1) .. wticc(string.sub(factionData.name, startIndex, endIndex), "FF2ECC40") .. string.sub(factionData.name, endIndex + 1)
+                                
+                            --else
+                                --factionData.description = string.sub(factionData.description, 0, startIndex - 1) .. wticc(string.sub(factionData.description, startIndex, endIndex), "FF2ECC40") .. string.sub(factionData.description, endIndex + 1)
+    
+                            end
+    
+                        end
+    
+                        firstActualIndex = index
+                        
+                        addDataWithIndexToList(factionData, index, factionList)
+    
                     end
+    
                 end
-
-                C_Reputation.SetSelectedFaction(firstActualIndex)
-
-                ReputationFrame.ScrollBox:SetDataProvider(CreateDataProvider(factionList), ScrollBoxConstants.RetainScrollPosition);
-                ReputationFrame.ReputationDetailFrame:Refresh()
             end
+    
+            C_Reputation.SetSelectedFaction(firstActualIndex)
+    
+            ReputationFrame.ScrollBox:SetDataProvider(CreateDataProvider(factionList), ScrollBoxConstants.RetainScrollPosition);
+            ReputationFrame.ReputationDetailFrame:Refresh()
+        end
+    
+    end
+end
+
+
+
+local function events(_, event, ...)
+    if(event == "PLAYER_ENTERING_WORLD") then
+        if(ReputationFrame and not _G["RepSearch_SettingsButton"]) then
+            loadRepSearch()
         end
     else
 

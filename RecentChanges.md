@@ -1,7 +1,5 @@
-## [1.0.0](https://github.com/NintendoLink07/RepSearch/releases/tag/1.0.0) - 2024-10-03
+## [1.0.1](https://github.com/NintendoLink07/RepSearch/releases/tag/1.0.1) - 2024-10-04
 
-### Changed
+### Fixed
 
-- Recoded the entire addon, now I just manipulate the update function of Blizzards ReputationFrame with an algorithm of my own.
-
-- Searching for something now colors the part of the name of the faction you were searching for (e.g. searching for "War" colors the "War" part in "The War Within" green).
+- The rep bar will now only be tried to be added to the ReputationFrame once it's actually loaded and then only once (instead of every time you see a loading screen lol).
