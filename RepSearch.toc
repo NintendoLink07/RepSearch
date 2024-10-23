@@ -1,9 +1,9 @@
-## Interface: 110002
+## Interface: 110005
 ## Title: RepSearch
 ## Author: Rhany-Ravencrest
 ## IconTexture: Interface\AddOns\RepSearch\res\Logo_256.png
 ## Notes: QoL search bar for your reputations.
-## Version: 1.0.1
+## Version: 1.0.2
 ## SavedVariables: REPSEARCH_SETTINGS
 ## AddonCompartmentFunc: REPSEARCH_OpenInterfaceOptions
 

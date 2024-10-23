@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog],
 and this project adheres to [Semantic Versioning].
 
+
+## [1.0.2] - 2024-10-23
+
+### Added
+
+- You can now search for the title of your current reputation standing/reaction, e.g. "Renown 10", "Collaborator", "Stranger", "Level 36", "True Friend", etc.
+
+### Fixed
+
+- Small performance improvements.
+
+
+
 ## [1.0.1] - 2024-10-04
 
 ### Fixed

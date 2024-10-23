@@ -30,6 +30,64 @@ local function isIDInList(id)
     return nil
 end
 
+local ReputationType = EnumUtil.MakeEnum(
+	"Standard",
+	"Friendship",
+	"MajorFaction"
+);
+
+local function checkForDescription(description, boxText)
+    local startIndex, endIndex, isNotTitle
+
+    if(REPSEARCH_SETTINGS.includeDescriptions) then
+        local startIndex, endIndex = string.find(string.lower(description), boxText)
+
+        if(startIndex) then
+            isNotTitle = true
+        end
+    end
+
+    return startIndex, endIndex, isNotTitle
+end
+
+local function checkForStandingReaction(factionData, boxText)
+    local isNotTitle
+    local type = ReputationType.Standard
+
+    local friendshipData = C_GossipInfo.GetFriendshipReputation(factionData.factionID);
+    local isFriendshipReputation = friendshipData and friendshipData.friendshipFactionID > 0;
+    if isFriendshipReputation then
+        type = ReputationType.Friendship;
+    end
+
+    if C_Reputation.IsMajorFaction(factionData.factionID) then
+        type = ReputationType.MajorFaction;
+    end
+
+    local reputationStandingtext
+
+    if(type == ReputationType.Standard) then
+        reputationStandingtext = _G["FACTION_STANDING_LABEL" .. factionData.reaction]
+
+    elseif(type == ReputationType.Friendship) then
+        reputationStandingtext = friendshipData.reaction
+        
+    elseif(type == ReputationType.MajorFaction) then
+        local majorFactionData = C_MajorFactions.GetMajorFactionData(factionData.factionID);
+        
+        reputationStandingtext = RENOWN_LEVEL_LABEL .. majorFactionData.renownLevel
+
+    end
+
+    local startIndex, endIndex = string.find(string.lower(reputationStandingtext), boxText)
+    
+    if(startIndex) then
+        isNotTitle = true
+    end
+
+    return startIndex, endIndex, isNotTitle
+end
+
 local function loadRepSearch()
     if(ReputationFrame) then
         local setting = Settings.RegisterAddOnSetting(category, "REPSEARCH_IncludeDescriptions", "includeDescriptions", REPSEARCH_SETTINGS, "boolean", "Include descriptions", false)
@@ -62,13 +120,15 @@ local function loadRepSearch()
             local boxText = searchBox:GetText() or ""
             local lastUpper, lastMiddle
             local allMiddleAllowed, allLowsAllowed
-            local isDescription
+            local isNotTitle
             --C_Reputation.ExpandAllFactionHeaders()
     
             factionList = {}
+
+            local lowerBoxText = string.lower(boxText)
     
             for index = 1, C_Reputation.GetNumFactions() do
-                isDescription = false
+                isNotTitle = false
                 local factionData = C_Reputation.GetFactionDataByIndex(index);
     
                 if(factionData) then
@@ -76,13 +136,14 @@ local function loadRepSearch()
                         C_Reputation.ExpandFactionHeader(index)
                     end
     
-                    local startIndex, endIndex = string.find(string.lower(factionData.name), string.lower(boxText))
+                    local startIndex, endIndex = string.find(string.lower(factionData.name), lowerBoxText)
     
-                    if(not startIndex and REPSEARCH_SETTINGS.includeDescriptions) then
-                        startIndex, endIndex = string.find(string.lower(factionData.description), string.lower(boxText))
-    
-                        if(startIndex) then
-                            isDescription = true
+                    if(not startIndex) then
+                        startIndex, endIndex, isNotTitle = checkForDescription(factionData.description, lowerBoxText)
+                        
+                        if(not isNotTitle) then
+                            startIndex, endIndex, isNotTitle = checkForStandingReaction(factionData, lowerBoxText)
+                            
                         end
                     end
                     
@@ -131,7 +192,7 @@ local function loadRepSearch()
                         end
     
                         if(startIndex) then
-                            if(not isDescription) then
+                            if(not isNotTitle) then
                                 factionData.name = string.sub(factionData.name, 0, startIndex - 1) .. wticc(string.sub(factionData.name, startIndex, endIndex), "FF2ECC40") .. string.sub(factionData.name, endIndex + 1)
                                 
                             --else
