@@ -71,7 +71,8 @@ and this project adheres to [Semantic Versioning].
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
 
 <!-- Versions -->
-[unreleased]: https://github.com/NintendoLink07/RepSearch/compare/v1.0.1...HEAD
+[unreleased]: https://github.com/NintendoLink07/RepSearch/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/NintendoLink07/RepSearch/releases/tag/1.0.2
 [1.0.1]: https://github.com/NintendoLink07/RepSearch/releases/tag/1.0.1
 [1.0.0]: https://github.com/NintendoLink07/RepSearch/releases/tag/1.0.0
 [0.6.2]: https://github.com/NintendoLink07/RepSearch/releases/tag/0.6.2
