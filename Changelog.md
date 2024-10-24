@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog],
 and this project adheres to [Semantic Versioning].
 
 
+## [1.0.3] - 2024-10-24
+
+### Fixed
+
+- When the "Include descriptions" setting is turned on it will now actually check if it was successful.
+
+
+
 ## [1.0.2] - 2024-10-23
 
 ### Added
@@ -71,7 +79,8 @@ and this project adheres to [Semantic Versioning].
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
 
 <!-- Versions -->
-[unreleased]: https://github.com/NintendoLink07/RepSearch/compare/v1.0.2...HEAD
+[unreleased]: https://github.com/NintendoLink07/RepSearch/compare/v1.0.3...HEAD
+[1.0.3]: https://github.com/NintendoLink07/RepSearch/releases/tag/1.0.3
 [1.0.2]: https://github.com/NintendoLink07/RepSearch/releases/tag/1.0.2
 [1.0.1]: https://github.com/NintendoLink07/RepSearch/releases/tag/1.0.1
 [1.0.0]: https://github.com/NintendoLink07/RepSearch/releases/tag/1.0.0

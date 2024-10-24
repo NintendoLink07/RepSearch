@@ -40,7 +40,7 @@ local function checkForDescription(description, boxText)
     local startIndex, endIndex, isNotTitle
 
     if(REPSEARCH_SETTINGS.includeDescriptions) then
-        local startIndex, endIndex = string.find(string.lower(description), boxText)
+        startIndex, endIndex = string.find(string.lower(description), boxText)
 
         if(startIndex) then
             isNotTitle = true
